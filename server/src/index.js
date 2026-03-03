@@ -39,28 +39,25 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Serve agent.py as download
+// Serve downloadable client files (stored in server/downloads/ which is inside Render rootDir)
+const downloadsDir = path.join(__dirname, '../downloads');
+
 app.get('/client-agent/agent.py', (req, res) => {
-  const agentPath = path.join(__dirname, '../../client-agent/agent.py');
   res.setHeader('Content-Disposition', 'attachment; filename="agent.py"');
   res.setHeader('Content-Type', 'text/x-python');
-  res.sendFile(agentPath);
+  res.sendFile(path.join(downloadsDir, 'agent.py'));
 });
 
-// Serve macOS .pkg installer
 app.get('/client-agent/BNY-RemoteSupport.pkg', (req, res) => {
-  const pkgPath = path.join(__dirname, '../../client-agent/BNY-RemoteSupport.pkg');
   res.setHeader('Content-Disposition', 'attachment; filename="BNY-RemoteSupport.pkg"');
   res.setHeader('Content-Type', 'application/octet-stream');
-  res.sendFile(pkgPath);
+  res.sendFile(path.join(downloadsDir, 'BNY-RemoteSupport.pkg'));
 });
 
-// Serve .command file directly
 app.get('/client-agent/BNY-RemoteSupport.command', (req, res) => {
-  const cmdPath = path.join(__dirname, '../../client-agent/BNY-RemoteSupport.command');
   res.setHeader('Content-Disposition', 'attachment; filename="BNY-RemoteSupport.command"');
   res.setHeader('Content-Type', 'application/octet-stream');
-  res.sendFile(cmdPath);
+  res.sendFile(path.join(downloadsDir, 'BNY-RemoteSupport.command'));
 });
 
 // ============== DATA STORES ==============
