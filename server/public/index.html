@@ -441,6 +441,37 @@
             background: currentColor;
         }
         
+        /* Fullscreen viewer */
+        .screen-viewer.fullscreen-mode {
+            position: fixed !important;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999;
+            background: #000;
+            border-radius: 0;
+        }
+        .screen-viewer.fullscreen-mode img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain;
+        }
+        .fullscreen-exit {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 10000;
+            background: rgba(220,53,69,0.9);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: none;
+        }
+        .fullscreen-exit.visible { display: block; }
+        
         /* File transfer */
         .file-drop-zone {
             border: 2px dashed rgba(255,255,255,0.2);
@@ -482,7 +513,7 @@
             <form id="login-form">
                 <div class="form-group">
                     <label>Server URL</label>
-                    <input type="text" id="server-url-input" placeholder="http://localhost:3000" value="http://localhost:3000">
+                    <input type="text" id="server-url-input" placeholder="http://localhost:3000">
                 </div>
                 <div class="form-group">
                     <label>Username</label>
@@ -611,7 +642,9 @@
                     </div>
                     <div class="spacer"></div>
                     <span id="frame-info" style="color:var(--gray);">Frames: 0</span>
+                    <button class="btn btn-secondary" onclick="toggleFullscreen()" id="fullscreen-btn">⛶ Fullscreen</button>
                 </div>
+                <button class="fullscreen-exit" id="fullscreen-exit" onclick="toggleFullscreen()">✕ Exit Fullscreen</button>
                 <div class="screen-viewer" id="screen-viewer">
                     <div class="screen-placeholder">Waiting for screen...</div>
                 </div>
@@ -686,8 +719,14 @@
     </div>
 
     <script>
+        // Auto-fill server URL input from current page origin
+        (function() {
+            const input = document.getElementById('server-url-input');
+            if (input) input.value = window.location.origin;
+        })();
+
         let SERVER_URL = window.location.origin;
-        let API_URL = '';
+        let API_URL = window.location.origin;
         let socket = null;
         let authToken = null;
         let currentUser = null;
@@ -741,6 +780,7 @@
             
             initSocket();
             refreshSessions();
+            setInterval(refreshSessions, 3000);
         }
 
         function logout() {
@@ -757,18 +797,83 @@
             
             socket.on('connect', () => console.log('Socket connected'));
             
+            let remoteWidth = 1920, remoteHeight = 1080;
+
             socket.on('screen:frame', (data) => {
                 const viewer = document.getElementById('screen-viewer');
                 let img = viewer.querySelector('img');
                 if (!img) {
                     viewer.innerHTML = '';
                     img = document.createElement('img');
+                    img.style.cssText = 'width:100%;height:100%;object-fit:contain;cursor:crosshair;display:block;';
                     viewer.appendChild(img);
+                    attachControlListeners(img);
                 }
                 img.src = data.frame;
+                if (data.originalWidth) remoteWidth = data.originalWidth;
+                if (data.originalHeight) remoteHeight = data.originalHeight;
                 frameCount++;
                 document.getElementById('frame-info').textContent = `Frames: ${frameCount}`;
             });
+
+            function getRemoteCoords(img, clientX, clientY) {
+                const rect = img.getBoundingClientRect();
+                const scaleX = remoteWidth / rect.width;
+                const scaleY = remoteHeight / rect.height;
+                return {
+                    x: Math.round((clientX - rect.left) * scaleX),
+                    y: Math.round((clientY - rect.top) * scaleY)
+                };
+            }
+
+            function attachControlListeners(img) {
+                img.addEventListener('mousemove', (e) => {
+                    if (!controlEnabled) return;
+                    const {x, y} = getRemoteCoords(img, e.clientX, e.clientY);
+                    socket.emit('mouse:event', { type: 'move', x, y });
+                });
+                img.addEventListener('click', (e) => {
+                    if (!controlEnabled) return;
+                    e.preventDefault();
+                    const {x, y} = getRemoteCoords(img, e.clientX, e.clientY);
+                    const btn = e.button === 2 ? 'right' : e.button === 1 ? 'middle' : 'left';
+                    socket.emit('mouse:event', { type: 'click', x, y, button: btn });
+                });
+                img.addEventListener('dblclick', (e) => {
+                    if (!controlEnabled) return;
+                    e.preventDefault();
+                    const {x, y} = getRemoteCoords(img, e.clientX, e.clientY);
+                    socket.emit('mouse:event', { type: 'dblclick', x, y, button: 'left' });
+                });
+                img.addEventListener('contextmenu', (e) => {
+                    if (!controlEnabled) return;
+                    e.preventDefault();
+                    const {x, y} = getRemoteCoords(img, e.clientX, e.clientY);
+                    socket.emit('mouse:event', { type: 'click', x, y, button: 'right' });
+                });
+                img.addEventListener('wheel', (e) => {
+                    if (!controlEnabled) return;
+                    e.preventDefault();
+                    const {x, y} = getRemoteCoords(img, e.clientX, e.clientY);
+                    socket.emit('mouse:event', { type: 'scroll', x, y, deltaY: e.deltaY });
+                }, { passive: false });
+                img.addEventListener('mousedown', (e) => {
+                    if (!controlEnabled) return;
+                    img.focus();
+                });
+
+                // Keyboard events on document when control is active
+                document.addEventListener('keydown', (e) => {
+                    if (!controlEnabled) return;
+                    e.preventDefault();
+                    socket.emit('keyboard:event', { type: 'keydown', key: e.key, code: e.code });
+                });
+                document.addEventListener('keyup', (e) => {
+                    if (!controlEnabled) return;
+                    e.preventDefault();
+                    socket.emit('keyboard:event', { type: 'keyup', key: e.key, code: e.code });
+                });
+            }
             
             socket.on('control:response', (data) => {
                 controlEnabled = data.granted;
@@ -870,19 +975,23 @@
         }
 
         function joinSessionByCode(code) {
+            if (!socket || !socket.connected) {
+                alert('Not connected to server. Please wait and try again.');
+                return;
+            }
+            console.log('Joining session with code:', code, 'socket:', socket.id, 'connected:', socket.connected);
             socket.emit('admin:join', { accessCode: code, token: authToken }, (response) => {
+                console.log('admin:join response:', response);
                 if (response.success) {
                     currentSessionId = response.sessionId;
                     frameCount = 0;
                     controlEnabled = false;
-                    
                     document.getElementById('remote-hostname').textContent = response.clientInfo?.hostname || 'Unknown';
                     document.getElementById('info-hostname').textContent = response.clientInfo?.hostname || '-';
                     document.getElementById('info-platform').textContent = response.clientInfo?.platform || '-';
                     document.getElementById('info-ip').textContent = response.clientInfo?.ip || '-';
                     document.getElementById('info-session').textContent = currentSessionId.substring(0, 8) + '...';
                     document.getElementById('chat-messages').innerHTML = '';
-                    
                     updateControlStatus();
                     showPage('remote');
                 } else {
@@ -890,6 +999,31 @@
                 }
             });
         }
+
+        // ============ FULLSCREEN ============
+        function toggleFullscreen() {
+            const viewer = document.getElementById('screen-viewer');
+            const exitBtn = document.getElementById('fullscreen-exit');
+            const fsBtn = document.getElementById('fullscreen-btn');
+            const isFs = viewer.classList.contains('fullscreen-mode');
+            if (isFs) {
+                viewer.classList.remove('fullscreen-mode');
+                exitBtn.classList.remove('visible');
+                fsBtn.textContent = '⛶ Fullscreen';
+                if (document.exitFullscreen) document.exitFullscreen();
+            } else {
+                viewer.classList.add('fullscreen-mode');
+                exitBtn.classList.add('visible');
+                fsBtn.textContent = '✕ Exit';
+                if (viewer.requestFullscreen) viewer.requestFullscreen();
+            }
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const viewer = document.getElementById('screen-viewer');
+                if (viewer.classList.contains('fullscreen-mode')) toggleFullscreen();
+            }
+        });
 
         // ============ REMOTE CONTROL ============
         function requestControl() {

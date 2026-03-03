@@ -254,7 +254,60 @@
         .permissions-note strong { display: block; margin-bottom: 5px; }
 
         .hidden { display: none !important; }
-        
+
+        /* Steps */
+        .steps { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        .step-num {
+            min-width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .step-body { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+        .step-body strong { font-size: 14px; }
+        .step-body span { font-size: 13px; color: var(--gray); }
+        .step-body a { color: var(--primary); }
+        .code-block {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-top: 4px;
+        }
+        .code-block code {
+            flex: 1;
+            font-size: 11px;
+            font-family: monospace;
+            color: #7ec8e3;
+            word-break: break-all;
+        }
+        .copy-btn {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
         .server-config {
             background: rgba(0,0,0,0.3);
             border-radius: 10px;
@@ -298,327 +351,74 @@
                 <p>Client Agent - Request Technical Support</p>
             </div>
 
-            <!-- Server URL Config -->
-            <div class="server-config" id="server-config">
-                <label>🌐 Server URL</label>
-                <input type="text" id="server-url" placeholder="http://your-server-ip:3000">
-                <div class="hint">Enter your BNY support server address (ask your IT admin)</div>
+            <!-- Download Status -->
+            <div class="status-box connected" id="status-box" style="margin-bottom:24px;">
+                <div class="status-icon">✅</div>
+                <div class="status-text">Agent Downloading...</div>
+                <div class="status-sub">Follow the steps below to start your support session</div>
             </div>
 
-            <!-- Status Display -->
-            <div class="status-box disconnected" id="status-box">
-                <div class="status-icon" id="status-icon">🔌</div>
-                <div class="status-text" id="status-text">Not Connected</div>
-                <div class="status-sub" id="status-sub">Click below to start a support session</div>
-            </div>
-
-            <!-- Access Code Display -->
-            <div class="access-code-box" id="code-box">
-                <label>Your Access Code</label>
-                <div class="access-code blur" id="access-code">--------</div>
-            </div>
-
-            <!-- Admin Connected Panel -->
-            <div class="admin-connected hidden" id="admin-panel">
-                <div class="icon">👨‍💻</div>
-                <div class="name" id="admin-name">Tech Support</div>
-                <div class="status">Connected & Viewing Your Screen</div>
-                <div class="control-indicator disabled" id="control-indicator">
-                    <span class="dot"></span>
-                    <span id="control-text">Remote Control: Off</span>
+            <!-- Steps -->
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-body">
+                        <strong>agent.py is downloading automatically</strong>
+                        <span>If it didn't start, <a href="/client-agent/agent.py" download="agent.py" id="manual-link">click here to download</a></span>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-body">
+                        <strong>Open Terminal and run:</strong>
+                        <div class="code-block">
+                            <code id="run-cmd">pip3 install python-socketio[client] pyautogui mss Pillow websocket-client &amp;&amp; python3 ~/Downloads/agent.py</code>
+                            <button class="copy-btn" onclick="copyCmd()">Copy</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-body">
+                        <strong>Share your Access Code</strong>
+                        <span>The terminal will show a code — give it to your IT support admin</span>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-body">
+                        <strong>Allow control when prompted</strong>
+                        <span>Type <code>yes</code> in terminal when asked to allow remote control</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Action Buttons -->
-            <button class="btn btn-primary" id="start-btn" onclick="startSession()">
-                🚀 Start Support Session
+            <button class="btn btn-primary" onclick="window.location.href='/client-agent/agent.py'" style="margin-top:10px;">
+                ⬇️ Download Agent Again
             </button>
-            <button class="btn btn-danger hidden" id="stop-btn" onclick="stopSession()">
-                ⏹️ End Session
-            </button>
-
-            <!-- Session Info -->
-            <div class="info-panel hidden" id="info-panel">
-                <div class="info-row">
-                    <label>Session ID</label>
-                    <span id="info-session">-</span>
-                </div>
-                <div class="info-row">
-                    <label>Connected At</label>
-                    <span id="info-time">-</span>
-                </div>
-                <div class="info-row">
-                    <label>Frames Sent</label>
-                    <span id="info-frames">0</span>
-                </div>
-            </div>
-
-            <!-- Chat Panel -->
-            <div class="chat-panel" id="chat-panel">
-                <div class="chat-messages" id="chat-messages"></div>
-                <div class="chat-input-row">
-                    <input type="text" id="chat-input" placeholder="Type a message..." 
-                           onkeydown="if(event.key==='Enter')sendChat()">
-                    <button onclick="sendChat()">Send</button>
-                </div>
-            </div>
-
-            <!-- Permissions Note -->
-            <div class="permissions-note" id="permissions-note">
-                <strong>⚠️ Screen Sharing Required</strong>
-                When you start a session, your browser will ask permission to share your screen.
-                Please select your entire screen for the best support experience.
-            </div>
         </div>
     </div>
 
     <script>
-        let socket = null;
-        let sessionId = null;
-        let accessCode = null;
-        let screenStream = null;
-        let frameCount = 0;
-        let captureInterval = null;
-
-        // Auto-fill server URL from current page location (if served from server)
+        // Auto-trigger agent.py download on page load
         (function() {
-            const input = document.getElementById('server-url');
-            if (window.location.protocol !== 'file:') {
-                input.value = window.location.origin;
-            } else {
-                input.value = 'http://10.221.180.213:3000';
-                input.style.borderColor = '#ffc107';
-            }
+            const a = document.createElement('a');
+            a.href = '/client-agent/agent.py';
+            a.download = 'agent.py';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         })();
 
-        function updateStatus(type, icon, text, sub) {
-            const box = document.getElementById('status-box');
-            box.className = 'status-box ' + type;
-            document.getElementById('status-icon').textContent = icon;
-            document.getElementById('status-text').textContent = text;
-            document.getElementById('status-sub').textContent = sub;
-        }
-
-        async function startSession() {
-            updateStatus('connecting', '⏳', 'Connecting...', 'Please wait');
-            document.getElementById('start-btn').disabled = true;
-
-            // Request screen sharing first
-            try {
-                screenStream = await navigator.mediaDevices.getDisplayMedia({
-                    video: { cursor: 'always', displaySurface: 'monitor' },
-                    audio: false
-                });
-            } catch (err) {
-                updateStatus('disconnected', '❌', 'Screen Share Denied', 'Please allow screen sharing to continue');
-                document.getElementById('start-btn').disabled = false;
-                return;
-            }
-
-            // Connect to server
-            const serverUrl = document.getElementById('server-url').value.trim();
-            if (!serverUrl) {
-                updateStatus('disconnected', '❌', 'Server URL Required', 'Please enter the server address');
-                document.getElementById('start-btn').disabled = false;
-                if (screenStream) {
-                    screenStream.getTracks().forEach(track => track.stop());
-                    screenStream = null;
-                }
-                return;
-            }
-            
-            try {
-                socket = io(serverUrl, {
-                    transports: ['websocket', 'polling'],
-                    timeout: 10000
-                });
-            } catch (err) {
-                updateStatus('disconnected', '❌', 'Connection Failed', 'Could not connect to server');
-                document.getElementById('start-btn').disabled = false;
-                return;
-            }
-            
-            socket.on('connect_error', (err) => {
-                updateStatus('disconnected', '❌', 'Connection Failed', 'Check server URL and try again');
-                document.getElementById('start-btn').disabled = false;
-                if (screenStream) {
-                    screenStream.getTracks().forEach(track => track.stop());
-                    screenStream = null;
-                }
-            });
-
-            socket.on('connect', () => {
-                // Register as client
-                socket.emit('client:register', {
-                    systemInfo: {
-                        hostname: 'Web Browser Client',
-                        platform: navigator.platform,
-                        os: navigator.userAgent.split('(')[1]?.split(')')[0] || 'Unknown'
-                    }
-                }, (response) => {
-                    if (response.success) {
-                        sessionId = response.sessionId;
-                        accessCode = response.accessCode;
-
-                        document.getElementById('access-code').textContent = accessCode;
-                        document.getElementById('access-code').classList.remove('blur');
-                        document.getElementById('info-session').textContent = sessionId.substring(0, 8) + '...';
-                        document.getElementById('info-time').textContent = new Date().toLocaleTimeString();
-
-                        updateStatus('connected', '✅', 'Ready for Support', 'Share the access code with your tech support');
-                        
-                        document.getElementById('start-btn').classList.add('hidden');
-                        document.getElementById('stop-btn').classList.remove('hidden');
-                        document.getElementById('info-panel').classList.remove('hidden');
-                        document.getElementById('permissions-note').classList.add('hidden');
-                        document.getElementById('server-config').classList.add('hidden');
-                    }
-                });
-            });
-
-            socket.on('admin:connected', (data) => {
-                document.getElementById('admin-name').textContent = data.adminName || 'Tech Support';
-                document.getElementById('admin-panel').classList.remove('hidden');
-                document.getElementById('chat-panel').classList.add('active');
-                updateStatus('active', '🖥️', 'Screen Being Shared', 'Tech support is viewing your screen');
-                
-                // Start sending frames
-                startScreenCapture();
-            });
-
-            socket.on('admin:disconnected', () => {
-                document.getElementById('admin-panel').classList.add('hidden');
-                document.getElementById('chat-panel').classList.remove('active');
-                updateStatus('connected', '✅', 'Ready for Support', 'Waiting for tech support to reconnect');
-                stopScreenCapture();
-                updateControlIndicator(false);
-            });
-
-            socket.on('control:request', (data) => {
-                // Auto-grant control for demo (in production, show confirmation dialog)
-                const granted = confirm(`${data.adminName || 'Tech Support'} is requesting remote control of your computer. Allow?`);
-                socket.emit('control:response', { granted });
-                updateControlIndicator(granted);
-            });
-
-            socket.on('chat:message', (msg) => {
-                if (msg.sender !== 'client') {
-                    addChatMessage(msg.text, 'received', msg.senderName);
-                }
-            });
-
-            socket.on('session:ended', (data) => {
-                alert('Session ended: ' + (data.reason || 'Ended by support'));
-                stopSession();
-            });
-
-            socket.on('disconnect', () => {
-                if (sessionId) {
-                    updateStatus('disconnected', '🔌', 'Disconnected', 'Connection lost');
-                }
+        function copyCmd() {
+            const cmd = document.getElementById('run-cmd').textContent;
+            navigator.clipboard.writeText(cmd).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 2000);
             });
         }
 
-        function stopSession() {
-            if (socket) {
-                socket.emit('session:end', { reason: 'Client ended session' });
-                socket.disconnect();
-            }
-            stopScreenCapture();
-            if (screenStream) {
-                screenStream.getTracks().forEach(track => track.stop());
-                screenStream = null;
-            }
-
-            sessionId = null;
-            accessCode = null;
-            frameCount = 0;
-
-            document.getElementById('access-code').textContent = '--------';
-            document.getElementById('access-code').classList.add('blur');
-            document.getElementById('start-btn').classList.remove('hidden');
-            document.getElementById('start-btn').disabled = false;
-            document.getElementById('stop-btn').classList.add('hidden');
-            document.getElementById('info-panel').classList.add('hidden');
-            document.getElementById('admin-panel').classList.add('hidden');
-            document.getElementById('chat-panel').classList.remove('active');
-            document.getElementById('permissions-note').classList.remove('hidden');
-            document.getElementById('server-config').classList.remove('hidden');
-
-            updateStatus('disconnected', '🔌', 'Session Ended', 'Click below to start a new session');
-        }
-
-        function startScreenCapture() {
-            if (!screenStream) return;
-
-            const video = document.createElement('video');
-            video.srcObject = screenStream;
-            video.play();
-
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-
-            captureInterval = setInterval(() => {
-                if (!socket || !socket.connected) return;
-
-                canvas.width = video.videoWidth * 0.5;  // Scale down
-                canvas.height = video.videoHeight * 0.5;
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                const frameData = canvas.toDataURL('image/jpeg', 0.4);
-                socket.emit('screen:frame', {
-                    frame: frameData,
-                    width: canvas.width,
-                    height: canvas.height
-                });
-
-                frameCount++;
-                document.getElementById('info-frames').textContent = frameCount;
-            }, 100); // 10 FPS
-        }
-
-        function stopScreenCapture() {
-            if (captureInterval) {
-                clearInterval(captureInterval);
-                captureInterval = null;
-            }
-        }
-
-        function updateControlIndicator(enabled) {
-            const indicator = document.getElementById('control-indicator');
-            const text = document.getElementById('control-text');
-            if (enabled) {
-                indicator.className = 'control-indicator enabled';
-                text.textContent = 'Remote Control: Active';
-            } else {
-                indicator.className = 'control-indicator disabled';
-                text.textContent = 'Remote Control: Off';
-            }
-        }
-
-        function sendChat() {
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if (text && socket) {
-                socket.emit('chat:message', { text });
-                addChatMessage(text, 'sent', 'You');
-                input.value = '';
-            }
-        }
-
-        function addChatMessage(text, type, sender) {
-            const container = document.getElementById('chat-messages');
-            const msg = document.createElement('div');
-            msg.className = 'chat-msg ' + type;
-            msg.innerHTML = `<div class="sender">${sender}</div><div>${text}</div>`;
-            container.appendChild(msg);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        // Handle screen share stop
-        window.addEventListener('beforeunload', () => {
-            if (socket) stopSession();
-        });
     </script>
 </body>
 </html>

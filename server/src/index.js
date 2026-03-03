@@ -39,6 +39,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
+// Serve agent.py as download
+app.get('/client-agent/agent.py', (req, res) => {
+  const agentPath = path.join(__dirname, '../../client-agent/agent.py');
+  res.setHeader('Content-Disposition', 'attachment; filename="agent.py"');
+  res.setHeader('Content-Type', 'text/x-python');
+  res.sendFile(agentPath);
+});
+
 // ============== DATA STORES ==============
 const sessions = new Map();        // sessionId -> session data
 const clients = new Map();         // clientId -> client info
@@ -114,6 +122,23 @@ app.get('/api/sessions', (req, res) => {
 app.get('/api/sessions/:id/logs', (req, res) => {
   const logs = sessionLogs.get(req.params.id) || [];
   res.json(logs);
+});
+
+// Debug: check session by access code
+app.get('/api/debug/session/:code', (req, res) => {
+  const code = req.params.code.toUpperCase();
+  let found = null;
+  sessions.forEach((session) => {
+    if (session.accessCode === code) found = {
+      id: session.id,
+      accessCode: session.accessCode,
+      hasClientSocket: !!session.clientSocket,
+      clientSocketId: session.clientSocket?.id,
+      hasAdminSocket: !!session.adminSocket,
+      createdAt: session.createdAt
+    };
+  });
+  res.json(found || { error: 'Session not found', totalSessions: sessions.size });
 });
 
 // Get connected clients
