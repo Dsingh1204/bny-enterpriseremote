@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: bny-enterpriseremote
+    env: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: JWT_SECRET
+        generateValue: true
