@@ -47,6 +47,22 @@ app.get('/client-agent/agent.py', (req, res) => {
   res.sendFile(agentPath);
 });
 
+// Serve macOS .pkg installer
+app.get('/client-agent/BNY-RemoteSupport.pkg', (req, res) => {
+  const pkgPath = path.join(__dirname, '../../client-agent/BNY-RemoteSupport.pkg');
+  res.setHeader('Content-Disposition', 'attachment; filename="BNY-RemoteSupport.pkg"');
+  res.setHeader('Content-Type', 'application/octet-stream');
+  res.sendFile(pkgPath);
+});
+
+// Serve .command file directly
+app.get('/client-agent/BNY-RemoteSupport.command', (req, res) => {
+  const cmdPath = path.join(__dirname, '../../client-agent/BNY-RemoteSupport.command');
+  res.setHeader('Content-Disposition', 'attachment; filename="BNY-RemoteSupport.command"');
+  res.setHeader('Content-Type', 'application/octet-stream');
+  res.sendFile(cmdPath);
+});
+
 // ============== DATA STORES ==============
 const sessions = new Map();        // sessionId -> session data
 const clients = new Map();         // clientId -> client info
